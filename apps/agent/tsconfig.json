@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "baseUrl": "../..",
+    "paths": {
+      "@testkit/shared": ["packages/shared/src/index.ts"],
+      "@testkit/shared/*": ["packages/shared/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

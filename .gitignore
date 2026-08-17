@@ -1,0 +1,28 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.local
+
+# SQLite database (local dev data, not shared)
+prisma/*.db
+prisma/*.db-journal
+
+# Binary content: files, screenshots, recordings, auth state
+storage/
+
+# Agent local state (contains the server token)
+.testkit/
+testkit-agent.config.json
+
+# Packaged agent output
+apps/agent/dist-exe/
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,24 @@
+# Normalise line endings in the repository, and check out per platform.
+* text=auto eol=lf
+
+# Windows launchers must keep CRLF: cmd.exe mis-parses LF-only batch files, and a
+# checkout with LF here produces "command not found" on lines that look fine.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Keep diffs readable and merges sane.
+*.md text
+*.json text
+*.ts text
+*.tsx text
+*.prisma text
+
+# Binary content should never be diffed or line-ending converted.
+*.png binary
+*.jpg binary
+*.xlsx binary
+*.zip binary
+*.pdf binary
+
+# Generated, so hide it from pull request diffs (still versioned).
+package-lock.json linguist-generated=true -diff

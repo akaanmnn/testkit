@@ -1,0 +1,32 @@
+{
+  "name": "testkit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Internal test automation platform - record locally, run centrally",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,web -c cyan,magenta \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "npm run dev -w @testkit/server",
+    "dev:web": "npm run dev -w @testkit/web",
+    "dev:agent": "npm run dev -w @testkit/agent",
+    "build": "npm run build -w @testkit/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "db:studio": "prisma studio",
+    "smoke:jsonl": "npm run smoke:jsonl -w @testkit/agent",
+    "start": "npm run build && npm run start -w @testkit/server"
+  },
+  "devDependencies": {
+    "concurrently": "9.1.2",
+    "prisma": "6.3.1",
+    "typescript": "5.7.3"
+  }
+}

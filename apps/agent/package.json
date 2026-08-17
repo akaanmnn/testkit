@@ -1,0 +1,28 @@
+{
+  "name": "@testkit/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "testkit-agent": "./bin/testkit-agent.js"
+  },
+  "scripts": {
+    "dev": "tsx watch --tsconfig tsconfig.json src/index.ts start",
+    "start": "tsx --tsconfig tsconfig.json src/index.ts start",
+    "login": "tsx --tsconfig tsconfig.json src/index.ts login",
+    "smoke:jsonl": "tsx --tsconfig tsconfig.json src/smoke/jsonlSmoke.ts",
+    "typecheck": "tsc --noEmit",
+    "build:exe": "node dist-tools/build-exe.mjs"
+  },
+  "dependencies": {
+    "@testkit/shared": "*",
+    "playwright": "1.56.0",
+    "ws": "8.18.0",
+    "tsx": "4.19.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.1",
+    "@types/ws": "8.5.14",
+    "typescript": "5.7.3"
+  }
+}

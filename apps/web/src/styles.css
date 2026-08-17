@@ -1,0 +1,710 @@
+/*
+  Visual direction: a lab instrument panel, not a SaaS dashboard.
+  Two analysts stare at this while a browser drives itself on their desk, so the
+  page reads like the front of a measuring device: cool grey chassis, hairline
+  rules, monospaced readouts for anything the machine reports, and exactly one
+  live element - the heartbeat trace in the masthead.
+*/
+
+:root {
+  --ink: #14181d;
+  --ink-soft: #5a646f;
+  --surface: #ffffff;
+  --chassis: #e7eaee;
+  --hairline: #cfd5dc;
+  --live: #0e6b58;
+  --signal: #a85b12;
+  --alert: #a32717;
+
+  --display: 'Space Grotesk', system-ui, sans-serif;
+  --body: 'Source Sans 3', system-ui, sans-serif;
+  --readout: 'JetBrains Mono', ui-monospace, monospace;
+
+  --gutter: 1.5rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--chassis);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.shell {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: var(--gutter);
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gutter);
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.wordmark span {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.tagline {
+  margin: 0.15rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+/* The signature element: a live trace of agent heartbeats. Each notch is one
+   poll; height encodes whether a heartbeat arrived. It is the only thing on the
+   page that moves. */
+.trace {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.trace svg {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+.trace-label {
+  font-family: var(--readout);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.trace-label strong {
+  display: block;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.trace-label strong[data-state='connected'] {
+  color: var(--live);
+}
+.trace-label strong[data-state='disconnected'],
+.trace-label strong[data-state='never-connected'] {
+  color: var(--alert);
+}
+
+/* ---------- panels ---------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  margin-top: var(--gutter);
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.panel-head h2 {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.panel-head .readout {
+  font-family: var(--readout);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.panel-body {
+  padding: 1.1rem;
+}
+
+/* ---------- readouts ---------- */
+
+.readout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1px;
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+}
+
+.readout-cell {
+  background: var(--surface);
+  padding: 0.7rem 0.85rem;
+}
+
+.readout-cell dt {
+  font-family: var(--readout);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.2rem;
+}
+
+.readout-cell dd {
+  font-family: var(--readout);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.readout-cell dd[data-tone='ok'] {
+  color: var(--live);
+}
+.readout-cell dd[data-tone='bad'] {
+  color: var(--alert);
+}
+
+/* ---------- agent rows ---------- */
+
+.agent-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.agent-row:first-child {
+  border-top: 0;
+}
+
+.dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--alert);
+  flex: none;
+}
+
+.dot[data-state='connected'] {
+  background: var(--live);
+}
+
+.agent-name {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.agent-meta {
+  font-family: var(--readout);
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  margin-left: auto;
+  text-align: right;
+}
+
+/* ---------- forms and buttons ---------- */
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+input[type='text'] {
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  padding: 0.45rem 0.6rem;
+  font-family: var(--readout);
+  letter-spacing: 0.06em;
+  min-width: 12rem;
+}
+
+input[type='text']:focus {
+  border-color: var(--ink);
+}
+
+button {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: #fff;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+
+button:hover:not(:disabled) {
+  background: #000;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--hairline);
+}
+
+button.quiet:hover:not(:disabled) {
+  background: var(--chassis);
+  border-color: var(--ink);
+}
+
+/* ---------- token handover ---------- */
+
+.token-card {
+  margin-top: 1rem;
+  border: 1px solid var(--signal);
+  background: #fdf7f0;
+  padding: 0.9rem 1rem;
+}
+
+.token-card h3 {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 0.4rem;
+  color: var(--signal);
+}
+
+.token-card p {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+}
+
+pre {
+  font-family: var(--readout);
+  font-size: 0.8rem;
+  background: var(--ink);
+  color: #f2f4f6;
+  padding: 0.7rem 0.8rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.empty {
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.error {
+  color: var(--alert);
+  font-family: var(--readout);
+  font-size: 0.82rem;
+  margin: 0.6rem 0 0;
+}
+
+.phase-note {
+  margin: var(--gutter) 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 40rem) {
+  .agent-meta {
+    margin-left: 0;
+    text-align: left;
+    width: 100%;
+  }
+}
+
+/* ---------- navigation ---------- */
+
+.tabs {
+  display: flex;
+  gap: 1px;
+  margin-top: var(--gutter);
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+}
+
+.tabs button {
+  flex: 1;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 0;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tabs button.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.tabs button:hover:not(.active) {
+  background: var(--chassis);
+  color: var(--ink);
+}
+
+/* ---------- tables ---------- */
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.grid th {
+  text-align: left;
+  font-family: var(--readout);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 400;
+  padding: 0 0.5rem 0.4rem 0;
+  border-bottom: 1px solid var(--ink);
+}
+
+.grid td {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+
+.grid tr:last-child td {
+  border-bottom: 0;
+}
+
+.grid .num {
+  text-align: right;
+  font-family: var(--readout);
+  padding-right: 0;
+}
+
+.grid .nowrap {
+  white-space: nowrap;
+}
+
+.grid tr.clickable {
+  cursor: pointer;
+}
+
+.grid tr.clickable:hover td {
+  background: var(--chassis);
+}
+
+.grid tr[data-disabled='true'] td {
+  opacity: 0.45;
+}
+
+.cell-title {
+  display: block;
+  font-family: var(--display);
+  font-weight: 500;
+}
+
+.cell-sub {
+  display: block;
+  font-family: var(--readout);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  word-break: break-all;
+}
+
+code {
+  font-family: var(--readout);
+  font-size: 0.8rem;
+}
+
+code.target {
+  color: var(--ink-soft);
+  word-break: break-all;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+/* A tag states a machine-readable fact, so it stays monospaced and unrounded. */
+.tag {
+  display: inline-block;
+  font-family: var(--readout);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--hairline);
+  color: var(--ink-soft);
+}
+
+.tag[data-status='ready'] {
+  border-color: var(--live);
+  color: var(--live);
+}
+
+.tag[data-status='upload'],
+.tag[data-status='file'] {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.tag[data-status='navigate'] {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+select {
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  padding: 0.35rem 0.4rem;
+  font-family: var(--readout);
+  font-size: 0.8rem;
+}
+
+button.small {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.72rem;
+  margin-left: 0.25rem;
+}
+
+.notice {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--signal);
+  background: #fdf7f0;
+  font-size: 0.88rem;
+}
+
+/* A download is a link, not a button, so it keeps right-click and Save as. */
+.button-link {
+  display: inline-block;
+  border: 1px solid var(--hairline);
+  padding: 0.2rem 0.45rem;
+  margin-left: 0.25rem;
+  font-family: var(--display);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.button-link:hover {
+  background: var(--chassis);
+  border-color: var(--ink);
+}
+
+/* ---------- data set tabs ---------- */
+
+.set-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+}
+
+.set-tabs button {
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 0;
+  padding: 0.4rem 0.8rem;
+  font-family: var(--readout);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.set-tabs button.active {
+  background: var(--ink);
+  color: #fff;
+}
+
+.set-tabs button:hover:not(.active) {
+  background: var(--chassis);
+  color: var(--ink);
+}
+
+/* An incomplete set cannot run, so the marker belongs on the tab itself. */
+.badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  color: var(--signal);
+  font-weight: 600;
+}
+
+.set-tabs button.active .badge {
+  color: #f0b775;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* ---------- run verdict ---------- */
+
+/* The verdict is the one place in this interface that shouts, because it is the
+   answer the analyst came for. */
+.verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-left: 4px solid var(--ink-soft);
+  background: var(--chassis);
+}
+
+.verdict strong {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+}
+
+.verdict span {
+  font-family: var(--readout);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.verdict[data-status='passed'] {
+  border-left-color: var(--live);
+  background: #eef5f2;
+}
+.verdict[data-status='passed'] strong {
+  color: var(--live);
+}
+.verdict[data-status='failed'] strong,
+.verdict[data-status='error'] strong {
+  color: var(--alert);
+}
+.verdict[data-status='failed'],
+.verdict[data-status='error'] {
+  border-left-color: var(--alert);
+  background: #f8eeec;
+}
+.verdict[data-status='running'],
+.verdict[data-status='queued'] {
+  border-left-color: var(--signal);
+  background: #fdf7f0;
+}
+
+.tag[data-status='GEÇTİ'],
+.tag[data-status='passed'] {
+  border-color: var(--live);
+  color: var(--live);
+}
+
+.tag[data-status='failed'],
+.tag[data-status='error'] {
+  border-color: var(--alert);
+  color: var(--alert);
+}
+
+.tag[data-status='running'],
+.tag[data-status='queued'] {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+/* ---------- screenshots ---------- */
+
+.thumb {
+  padding: 0;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  cursor: zoom-in;
+  line-height: 0;
+}
+
+.thumb img {
+  width: 88px;
+  height: 55px;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+
+.thumb:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 2rem;
+  background: rgba(20, 24, 29, 0.88);
+  cursor: zoom-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--ink-soft);
+}
+
+/* ---------- data set checkboxes ---------- */
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--readout);
+  font-size: 0.85rem;
+}

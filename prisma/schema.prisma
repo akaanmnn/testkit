@@ -1,0 +1,249 @@
+// TestKit data model.
+//
+// Conventions, because SQLite is intentionally the only database here:
+//   * No Prisma enums (SQLite does not support them) -> String columns whose
+//     allowed values live in packages/shared as TypeScript unions.
+//   * No JSON columns -> String columns holding serialised JSON, parsed in the
+//     service layer. Suffix: ...Json.
+//   * No BLOBs. Binary content (uploads, screenshots, storage state) lives on
+//     the filesystem under STORAGE_ROOT; here we keep paths + metadata only.
+//
+// Fields marked "// future:" exist so that a later phase can be additive rather
+// than a migration that rewrites relations. Nothing in the MVP reads them.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------------------------
+// Scenario: the reusable *shape* of a test. Holds no test data of its own.
+// ---------------------------------------------------------------------------
+
+model TestScenario {
+  id          String   @id @default(cuid())
+  name        String   @unique // "Müşteri Oluşturma"
+  description String?
+  baseUrl     String
+  status      String   @default("draft") // draft | ready | archived
+  ownerLabel  String? // future: per-user ownership, unused in MVP
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps      TestStep[]
+  variables  ScenarioVariable[]
+  dataSets   DataSet[]
+  runs       TestRun[]
+  recordings RecordingSession[]
+}
+
+model TestStep {
+  id         String @id @default(cuid())
+  scenarioId String
+  order      Int
+
+  // navigate | click | dblclick | fill | press | select | check | uncheck |
+  // upload | assertVisible | assertText | assertValue
+  type String
+
+  // --- targeting (mirrors what Playwright's JSONL recorder gives us) ---
+  selector      String? // internal:role=textbox[name="Müşteri Adı"i]
+  locatorJson   String? // recorder locator descriptor, for human-readable display
+  label         String? // getByRole('textbox', { name: 'Müşteri Adı' })
+  pageAlias     String  @default("page")
+  framePathJson String? // future: iframe support; recorder already emits framePath
+
+  // --- value ---
+  // recordedValue is documentation only: what the analyst typed while recording.
+  // It is never used to run a test against a data set.
+  recordedValue String?
+  variableId    String? // set => value comes from the selected DataSet
+  optionsJson   String? // { button, clickCount, modifiers, key, timeoutMs, ... }
+  enabled       Boolean @default(true)
+
+  scenario TestScenario      @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  variable ScenarioVariable? @relation(fields: [variableId], references: [id], onDelete: SetNull)
+  runSteps TestRunStep[]
+
+  @@index([scenarioId, order])
+}
+
+// The contract: which variables this scenario needs. Values live in DataSets.
+model ScenarioVariable {
+  id           String  @id @default(cuid())
+  scenarioId   String
+  key          String // customerName, customerSurname, document
+  displayName  String?
+  type         String // text | number | date | file | select
+  required     Boolean @default(true)
+  defaultValue String? // non-file types only
+  order        Int     @default(0)
+
+  scenario TestScenario   @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  steps    TestStep[]
+  values   DataSetValue[]
+
+  @@unique([scenarioId, key])
+}
+
+// ---------------------------------------------------------------------------
+// Data: independent of the scenario's steps.
+// ---------------------------------------------------------------------------
+
+// MVP: a DataSet belongs to one scenario.
+// future: shared/global data sets -> add `scope` and make scenarioId nullable.
+model DataSet {
+  id         String   @id @default(cuid())
+  scenarioId String
+  name       String // "Ahmet", "Mehmet"
+  notes      String?
+  ownerLabel String? // future: per-user ownership, unused in MVP
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  scenario TestScenario   @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  values   DataSetValue[]
+  runs     TestRun[]
+
+  @@unique([scenarioId, name])
+}
+
+model DataSetValue {
+  id         String  @id @default(cuid())
+  dataSetId  String
+  variableId String
+  textValue  String? // variable.type != file
+  fileId     String? // variable.type == file
+
+  dataSet  DataSet          @relation(fields: [dataSetId], references: [id], onDelete: Cascade)
+  variable ScenarioVariable @relation(fields: [variableId], references: [id], onDelete: Cascade)
+  file     StoredFile?      @relation(fields: [fileId], references: [id])
+
+  @@unique([dataSetId, variableId])
+}
+
+// Metadata only. Bytes live at STORAGE_ROOT/<relativePath>.
+model StoredFile {
+  id           String   @id @default(cuid())
+  originalName String // "ahmet.xlsx"
+  relativePath String // "files/clx.../ahmet.xlsx"
+  mimeType     String?
+  sizeBytes    Int
+  checksum     String? // sha256, for future dedupe
+  source       String   @default("upload") // upload | recorder
+  createdAt    DateTime @default(now())
+
+  values DataSetValue[]
+}
+
+// ---------------------------------------------------------------------------
+// Authentication abstraction: nothing about the target app is assumed here.
+// A profile is just "some way to arrive logged in", currently Playwright
+// storageState captured on an analyst machine. SSO/MFA flows can be added as
+// new `kind` values without touching the runner.
+// ---------------------------------------------------------------------------
+
+model LoginProfile {
+  id           String    @id @default(cuid())
+  name         String    @unique // "CRM - test kullanıcısı"
+  kind         String    @default("storageState") // storageState | none | (future: script, oidcToken)
+  relativePath String? // "secrets/<id>/storageState.json" - never served to the browser
+  capturedAt   DateTime?
+  expiresAt    DateTime? // best-effort hint so the UI can warn before a run fails
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  runs TestRun[]
+}
+
+// ---------------------------------------------------------------------------
+// Recording: happens on an analyst machine, streamed in over the agent socket.
+// ---------------------------------------------------------------------------
+
+model Agent {
+  id               String   @id @default(cuid())
+  name             String   @unique // "AHMET-PC"
+  tokenHash        String // sha256 of the pairing token; never store the token
+  os               String?
+  agentVersion     String?
+  playwrightVersion String?
+  lastSeenAt       DateTime?
+  createdAt        DateTime @default(now())
+
+  recordings RecordingSession[]
+}
+
+model RecordingSession {
+  id         String    @id @default(cuid())
+  scenarioId String? // set when re-recording an existing scenario
+  agentId    String?
+  targetUrl  String
+  status     String    @default("starting") // starting | recording | stopped | failed | discarded
+  rawJsonlPath String? // storage/recordings/<id>/session.jsonl (server-side copy)
+  actionCount Int      @default(0)
+  errorMessage String?
+  startedAt  DateTime  @default(now())
+  stoppedAt  DateTime?
+
+  scenario TestScenario? @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
+  agent    Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
+}
+
+// ---------------------------------------------------------------------------
+// Execution: server-side in the MVP.
+// ---------------------------------------------------------------------------
+
+model TestRun {
+  id             String    @id @default(cuid())
+  scenarioId     String
+  dataSetId      String?
+  loginProfileId String?
+
+  // MVP always writes "server". The runner never branches on this value yet;
+  // it exists so agent-side execution is an additive change later.
+  target String @default("server")
+
+  status       String    @default("queued") // queued | running | passed | failed | error | cancelled
+  headed       Boolean   @default(false)
+  queuedAt     DateTime  @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  durationMs   Int?
+  errorMessage String?
+  artifactDir  String? // "artifacts/<runId>"
+
+  // Frozen copy of the data used for this run. Editing the DataSet afterwards
+  // must never change what history shows.
+  resolvedDataJson String?
+
+  scenario     TestScenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  dataSet      DataSet?      @relation(fields: [dataSetId], references: [id], onDelete: SetNull)
+  loginProfile LoginProfile?  @relation(fields: [loginProfileId], references: [id], onDelete: SetNull)
+  steps        TestRunStep[]
+
+  @@index([scenarioId, queuedAt])
+}
+
+model TestRunStep {
+  id             String  @id @default(cuid())
+  runId          String
+  stepId         String? // null once the scenario step is deleted; history survives
+  order          Int
+  type           String
+  label          String?
+  resolvedValue  String? // "Ahmet" or the absolute path handed to setInputFiles
+  status         String // passed | failed | skipped
+  durationMs     Int?
+  errorMessage   String?
+  screenshotPath String? // relative to artifactDir
+
+  run  TestRun   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  step TestStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  @@index([runId, order])
+}
