@@ -72,10 +72,9 @@ Bu adımı **sen** yapıyorsun, analist hiçbir şey yazmıyor.
 5. İndirdiğin `testkit-agent.config.json` dosyasını
    `testkit\apps\agent\` klasörünün içine koy
 
-> Şimdilik agent, projenin tamamıyla birlikte çalışıyor (tek dosya `.exe` için
-> `npm run build:exe -w @testkit/agent` komutunu Windows'ta çalıştırman gerekiyor
-> — onu Phase 5'te sana hazır vereceğim). Bu yüzden analist bilgisayarına da
-> klasörün kopyası gidiyor.
+> Agent şimdilik projenin tamamıyla birlikte çalışır, bu yüzden analist
+> bilgisayarına klasörün bir kopyası gider. Tek dosya hâline getirmek için
+> Windows üzerinde `npm run build:exe -w @testkit/agent` komutu kullanılabilir.
 
 ---
 
@@ -222,9 +221,8 @@ eksik kontrolü · oturum profilleri · **testi çalıştırma** · adım adım 
 her adımın ekran görüntüsü · canlı akış · toplu koşu · koşu geçmişi ve veri
 anlık görüntüsü.
 
-Henüz olmayan (Phase 5): sürükle-bırak adım sıralama, agent üzerinde hata
-ayıklama koşusu (tarayıcıyı analist gözüyle izleyerek), tek dosya `.exe`
-paketlemesi, iframe desteği.
+Henüz olmayan: sürükle-bırak adım sıralama, agent üzerinde gözle izlenen hata
+ayıklama koşusu, tek dosya `.exe` paketlemesi, iframe desteği.
 
 Güncelleme geldiğinde: `testkit` klasörünü değiştirip sunucuyu yeniden
 başlatmak yeterli. `prisma/dev.db` ve `storage/` klasörü yerinde kalır, yani
